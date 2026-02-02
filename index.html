@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART EXAM TKA 1977</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --secondary: #10b981; --dark: #0f172a; --bg: #f1f5f9; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: #1e293b; margin: 0; display: flex; justify-content: center; min-height: 100vh; }
+        
+        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.1); position: relative; }
+
+        /* Header */
+        .app-header { background: var(--dark); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        .app-header h1 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .screen { display: none; padding: 20px; flex-grow: 1; flex-direction: column; animation: fadeIn 0.3s ease; }
+        .active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Welcome Screen */
+        .welcome-icon { font-size: 60px; text-align: center; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
+
+        /* Mapel Cards */
+        .mapel-card { background: white; border: 2px solid #f1f5f9; padding: 20px; border-radius: 16px; margin-bottom: 15px; cursor: pointer; display: flex; align-items: center; transition: 0.3s; }
+        .mapel-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+
+        /* Exam UI */
+        .timer-bar { background: #fee2e2; color: #dc2626; padding: 10px; border-radius: 30px; text-align: center; font-weight: 800; font-size: 14px; margin-bottom: 20px; }
+        .story-box { background: #f8fafc; border-left: 4px solid var(--primary); padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.6; margin-bottom: 15px; }
+        .question-text { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+        .opt-box { background: white; border: 2px solid #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; transition: 0.2s; }
+        .opt-box:hover { border-color: var(--primary); }
+        .opt-box.selected { background: var(--primary); border-color: var(--primary); color: white; font-weight: 600; }
+
+        /* Grid Nomor Soal */
+        .q-navigation { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 1px dashed #cbd5e1; }
+        .q-num { background: #f1f5f9; padding: 10px; text-align: center; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .q-num.done { background: var(--secondary); color: white; }
+        .q-num.active-now { border: 2px solid var(--primary); color: var(--primary); }
+
+        /* Buttons */
+        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 800; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn-nav { display: flex; gap: 10px; margin-top: auto; }
+
+        /* Result */
+        .score-circle { width: 150px; height: 150px; border-radius: 50%; border: 10px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 50px; font-weight: 900; margin: 30px auto; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="app-header">
+        <h1>Ujian TKA 1977</h1>
+    </div>
+
+    <div id="scr-1" class="screen active">
+        <div class="welcome-icon">🎓</div>
+        <h2 style="text-align:center">Data Peserta</h2>
+        <input type="text" id="user-name" placeholder="Nama Lengkap Siswa">
+        <select id="user-class">
+            <option value="">Pilih Kelas</option>
+            <option>Kelas 9A</option>
+            <option>Kelas 9B</option>
+            <option>Kelas 9C</option>
+            <option>Kelas 9D</option>
+            <option>Kelas 9E</option>
+            <option>Kelas 9F</option>
+            <option>Kelas 9G</option>
+        </select>
+        <button class="btn-main" onclick="goToMapel()">MASUK UJIAN</button>
+    </div>
+
+    <div id="scr-2" class="screen">
+        <h3>Pilih Mata Pelajaran</h3>
+        <div class="mapel-card" onclick="startTest('B. INDO')">
+            <div style="font-size:40px; margin-right:20px">📖</div>
+            <div><b>Bahasa Indonesia</b><br><small>30 Soal Literasi & Cerita</small></div>
+        </div>
+        <div class="mapel-card" onclick="startTest('MATEMATIKA')">
+            <div style="font-size:40px; margin-right:20px">🔢</div>
+            <div><b>Matematika</b><br><small>30 Soal Numerasi & Logika</small></div>
+        </div>
+    </div>
+
+    <div id="scr-3" class="screen">
+        <div id="exam-timer" class="timer-bar">Sisa Waktu: 40:00</div>
+        <div id="question-area"></div>
+        
+        <div class="btn-nav">
+            <button onclick="changeQ(-1)" style="flex:1; background:#e2e8f0; border:none; border-radius:12px; font-weight:bold; cursor:pointer">Kembali</button>
+            <button onclick="changeQ(1)" id="btn-next" class="btn-main" style="flex:2; margin:0">Selanjutnya</button>
+            <button onclick="submitExam()" id="btn-finish" class="btn-main" style="flex:2; margin:0; background:var(--secondary); display:none">Kirim Jawaban</button>
+        </div>
+
+        <div class="q-navigation" id="q-nav-grid"></div>
+    </div>
+
+    <div id="scr-4" class="screen" style="text-align:center">
+        <h2>Hasil Akhir</h2>
+        <div class="score-circle" id="final-score">0</div>
+        <div id="final-info" style="white-space: pre-line; background:#f8fafc; padding:20px; border-radius:15px; margin-bottom:20px"></div>
+        <button class="btn-main" onclick="location.reload()">Selesai & Keluar</button>
+    </div>
+</div>
+
+<script>
+    let currentMapel = '', currentIdx = 0, secondsLeft = 2400, timerInt, answers = {}, activeQs = [];
+
+    // DATA SOAL
+    const bankIndo = [];
+    for(let i=1; i<=30; i++) {
+        bankIndo.push({
+            t: `Warga desa Maju Bersama mulai membiasakan membuang sampah pada tempatnya. Hal ini dilakukan untuk menjaga kebersihan lingkungan desa agar terhindar dari penyakit.`,
+            q: `(${i}) Apa tujuan warga membuang sampah pada tempatnya?`,
+            o: ["Biar dapat hadiah", "Menjaga kebersihan & kesehatan", "Menakuti nyamuk", "Perintah kepala desa"],
+            a: 1
+        });
+    }
+
+    const bankMtk = [];
+    for(let i=1; i<=30; i++) {
+        bankMtk.push({
+            q: `(${i}) Jika sebuah toko memberikan diskon 10% untuk barang seharga Rp ${i*10000}, berapakah harga setelah diskon?`,
+            o: [`Rp ${(i*10000)*0.9}`, `Rp ${i*1000}`, "Rp 5.000", "Rp 0"],
+            a: 0
+        });
+    }
+
+    function goToMapel() {
+        if(!document.getElementById('user-name').value || !document.getElementById('user-class').value) {
+            return alert("Lengkapi Nama dan Kelas ya!");
+        }
+        showScr('scr-2');
+    }
+
+    function startTest(m) {
+        currentMapel = m;
+        activeQs = m === 'B. INDO' ? bankIndo : bankMtk;
+        currentIdx = 0;
+        answers = {};
+        showScr('scr-3');
+        renderQuestion();
+        renderNav();
+        timerInt = setInterval(clock, 1000);
+    }
+
+    function renderQuestion() {
+        const s = activeQs[currentIdx];
+        let h = `<div style="font-weight:800; color:var(--primary); margin-bottom:10px">SOAL NO. ${currentIdx+1}</div>`;
+        if(s.t) h += `<div class="story-box"><b>BACAAN:</b><br>${s.t}</div>`;
+        h += `<div class="question-text">${s.q}</div>`;
+        s.o.forEach((opt, i) => {
+            h += `<div class="opt-box ${answers[currentIdx] === i ? 'selected' : ''}" onclick="select(${i})">
+                <span style="margin-right:15px; font-weight:900">${String.fromCharCode(65+i)}.</span> ${opt}
+            </div>`;
+        });
+        document.getElementById('question-area').innerHTML = h;
+        
+        document.getElementById('btn-next').style.display = currentIdx === 29 ? 'none' : 'block';
+        document.getElementById('btn-finish').style.display = currentIdx === 29 ? 'block' : 'none';
+        renderNav();
+    }
+
+    function select(i) { answers[currentIdx] = i; renderQuestion(); }
+
+    function changeQ(dir) {
+        if(currentIdx + dir >= 0 && currentIdx + dir < 30) {
+            currentIdx += dir;
+            renderQuestion();
+        }
+    }
+
+    function jumpTo(i) { currentIdx = i; renderQuestion(); }
+
+    function renderNav() {
+        let h = '';
+        for(let i=0; i<30; i++) {
+            let cls = 'q-num';
+            if(i === currentIdx) cls += ' active-now';
+            if(answers[i] !== undefined) cls += ' done';
+            h += `<div class="${cls}" onclick="jumpTo(${i})">${i+1}</div>`;
+        }
+        document.getElementById('q-nav-grid').innerHTML = h;
+    }
+
+    function clock() {
+        secondsLeft--;
+        let m = Math.floor(secondsLeft/60), s = secondsLeft%60;
+        document.getElementById('exam-timer').innerText = `Sisa Waktu: ${m}:${s<10?'0'+s:s}`;
+        if(secondsLeft <= 0) submitExam();
+    }
+
+    function submitExam() {
+        clearInterval(timerInt);
+        let benar = 0;
+        activeQs.forEach((q, i) => { if(answers[i] === q.a) benar++; });
+        let skor = Math.round((benar/30)*100);
+        showScr('scr-4');
+        document.getElementById('final-score').innerText = skor;
+        document.getElementById('final-info').innerText = `Nama: ${document.getElementById('user-name').value}\nKelas: ${document.getElementById('user-class').value}\nMapel: ${currentMapel}\nBenar: ${benar} | Salah: ${30-benar}`;
+    }
+
+    function showScr(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+</script>
+
+</body>
+</html>
